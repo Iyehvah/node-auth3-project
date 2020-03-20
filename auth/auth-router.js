@@ -4,6 +4,7 @@ const Users = require("../users/users-model")
 const jwt = require("jsonwebtoken")
 const router = express.Router()
 const db = require("../data/config")
+const restrict = require("../middleware/restrict")
 
 router.post("/register", async (req, res, next) => {
     try {
@@ -48,7 +49,10 @@ router.post("/login", async (req, res, next) => {
             userRole: "admin"
         }
         console.log("checkpoint 3")
-        const token = jwt.sign(payload, process.env.MY_SECRET)
+        const expireToken = {
+            expiresIn: '15s'
+        }
+        const token = jwt.sign(payload, process.env.MY_SECRET, expireToken)
         console.log("checkpoint 4")
         res.cookie("token", token)
         console.log("checkpoint 5")
@@ -60,6 +64,18 @@ router.post("/login", async (req, res, next) => {
     } catch(error) {
         next(error)
     }
+})
+
+router.get("/logout", restrict(), (req, res, next) => {
+	req.session.destroy((error) => {
+		if (error) {
+			next(error)
+		} else {
+			res.json({
+				message: "Logged out successfully!"
+			})
+		}
+	})
 })
 
 
